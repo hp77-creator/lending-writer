@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { Application, CopilotAnalysis } from "@/types";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle2, ChevronRight, Loader2, ShieldAlert } from "lucide-react";
 
 interface AICopilotProps {
   application: Application;
+  onCitationClick?: (docName: string, query: string) => void;
 }
 
-export default function AICopilot({ application }: AICopilotProps) {
+export default function AICopilot({ application, onCitationClick }: AICopilotProps) {
   const [analysis, setAnalysis] = useState<CopilotAnalysis>({ status: "idle" });
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -18,6 +19,43 @@ export default function AICopilot({ application }: AICopilotProps) {
     setAnalysis({ status: "idle" });
     setHasStarted(false);
   }, [application.id]);
+
+  const parseTextWithCitations = (text: string) => {
+    if (!text) return null;
+    const regex = /<cite\s+doc="([^"]+)"\s+query="([^"]+)">([^<]+)<\/cite>/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex, match.index)}</span>);
+      }
+
+      const doc = match[1];
+      const query = match[2];
+      const content = match[3];
+      
+      parts.push(
+        <button
+          key={`cite-${match.index}`}
+          onClick={() => onCitationClick?.(doc, query)}
+          className="underline decoration-dotted underline-offset-4 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-1 py-0.5 -mx-0.5 rounded transition-colors text-inherit font-semibold opacity-90 hover:opacity-100"
+          title={`Found in ${doc}`}
+        >
+          {content}
+        </button>
+      );
+
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push(<span key={`text-${lastIndex}`}>{text.substring(lastIndex)}</span>);
+    }
+
+    return parts;
+  };
 
   const handleAnalyze = async () => {
     setHasStarted(true);
@@ -100,7 +138,7 @@ export default function AICopilot({ application }: AICopilotProps) {
             {analysis.red_flags?.map((flag, idx) => (
               <li key={idx} className="text-sm text-red-700 dark:text-red-400 flex items-start gap-2">
                 <span className="shrink-0 mt-1">•</span>
-                <span dangerouslySetInnerHTML={{ __html: flag }}></span>
+                <span>{parseTextWithCitations(flag)}</span>
               </li>
             ))}
           </ul>
@@ -123,13 +161,18 @@ export default function AICopilot({ application }: AICopilotProps) {
           </div>
           <div className="p-3 border-l border-neutral-100 dark:border-neutral-800 font-medium">
             {analysis.extracted_income ? (
-              <span className={
-                Math.abs(analysis.extracted_income - application.profile.monthly_income_stated) > 1000 
-                  ? "text-amber-600 dark:text-amber-500" 
-                  : "text-green-600 dark:text-green-500"
-              }>
-                {formatCurrency(analysis.extracted_income)}
-              </span>
+              <button 
+                onClick={() => onCitationClick?.(analysis.extracted_income!.source_document, analysis.extracted_income!.search_query)}
+                className={cn(
+                  "underline decoration-dotted underline-offset-4 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-1 -mx-1 py-0.5 rounded transition-colors text-left",
+                  Math.abs(analysis.extracted_income.value - application.profile.monthly_income_stated) > 1000 
+                    ? "text-amber-600 dark:text-amber-500 decoration-amber-400" 
+                    : "text-green-600 dark:text-green-500 decoration-green-400"
+                )}
+                title={`Found in ${analysis.extracted_income.source_document}`}
+              >
+                {formatCurrency(analysis.extracted_income.value)}
+              </button>
             ) : (
               <span className="text-neutral-400 italic">Could not extract</span>
             )}
@@ -142,16 +185,21 @@ export default function AICopilot({ application }: AICopilotProps) {
           <div className="p-3 border-l border-neutral-100 dark:border-neutral-800 truncate" title={application.profile.employer}>
             {application.profile.employer}
           </div>
-          <div className="p-3 border-l border-neutral-100 dark:border-neutral-800 font-medium truncate" title={analysis.extracted_employer || ""}>
+          <div className="p-3 border-l border-neutral-100 dark:border-neutral-800 font-medium truncate" title={analysis.extracted_employer?.value || ""}>
             {analysis.extracted_employer ? (
-              <span className={
-                application.profile.employer.toLowerCase().includes(analysis.extracted_employer.toLowerCase()) || 
-                analysis.extracted_employer.toLowerCase().includes(application.profile.employer.toLowerCase())
-                  ? "text-green-600 dark:text-green-500"
-                  : "text-amber-600 dark:text-amber-500"
-              }>
-                {analysis.extracted_employer}
-              </span>
+              <button 
+                onClick={() => onCitationClick?.(analysis.extracted_employer!.source_document, analysis.extracted_employer!.search_query)}
+                className={cn(
+                  "underline decoration-dotted underline-offset-4 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-1 -mx-1 py-0.5 rounded transition-colors text-left truncate max-w-full",
+                  application.profile.employer.toLowerCase().includes(analysis.extracted_employer.value.toLowerCase()) || 
+                  analysis.extracted_employer.value.toLowerCase().includes(application.profile.employer.toLowerCase())
+                    ? "text-green-600 dark:text-green-500 decoration-green-400"
+                    : "text-amber-600 dark:text-amber-500 decoration-amber-400"
+                )}
+                title={`Found in ${analysis.extracted_employer.source_document}`}
+              >
+                {analysis.extracted_employer.value}
+              </button>
             ) : (
               <span className="text-neutral-400 italic">Could not extract</span>
             )}
@@ -170,7 +218,7 @@ export default function AICopilot({ application }: AICopilotProps) {
             {analysis.discrepancies?.map((disc, idx) => (
               <li key={idx} className="text-sm text-amber-700 dark:text-amber-500 flex items-start gap-2">
                 <span className="shrink-0 mt-1">•</span>
-                <span>{disc}</span>
+                <span>{parseTextWithCitations(disc)}</span>
               </li>
             ))}
           </ul>
@@ -180,7 +228,7 @@ export default function AICopilot({ application }: AICopilotProps) {
       {/* Summary */}
       <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed bg-white/50 dark:bg-neutral-900/50 p-4 rounded-lg border border-neutral-200/50 dark:border-neutral-800/50 shadow-sm">
         <strong className="text-neutral-900 dark:text-neutral-100 block mb-1">Copilot Summary</strong>
-        {analysis.summary}
+        {parseTextWithCitations(analysis.summary || "")}
       </div>
 
       {/* All Good State */}

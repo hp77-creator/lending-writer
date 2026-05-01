@@ -21,8 +21,16 @@ export interface Application {
 
 export interface CopilotAnalysis {
   status: "idle" | "loading" | "complete" | "error";
-  extracted_income?: number;
-  extracted_employer?: string;
+  extracted_income?: {
+    value: number;
+    source_document: string;
+    search_query: string;
+  } | null;
+  extracted_employer?: {
+    value: string;
+    source_document: string;
+    search_query: string;
+  } | null;
   discrepancies?: string[];
   red_flags?: string[];
   summary?: string;

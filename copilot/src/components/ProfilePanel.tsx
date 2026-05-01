@@ -10,9 +10,10 @@ interface ProfilePanelProps {
   application: Application;
   decision: string | null;
   onDecisionMade: (decision: string) => void;
+  onCitationClick?: (docName: string, query: string) => void;
 }
 
-export default function ProfilePanel({ application, decision, onDecisionMade }: ProfilePanelProps) {
+export default function ProfilePanel({ application, decision, onDecisionMade, onCitationClick }: ProfilePanelProps) {
   const { profile } = application;
   const { getTimeSpentSeconds } = useReviewTimer(application.id);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,7 +103,7 @@ export default function ProfilePanel({ application, decision, onDecisionMade }: 
           </div>
         </div>
         <div className="p-4">
-          <AICopilot application={application} />
+          <AICopilot application={application} onCitationClick={onCitationClick} />
         </div>
       </div>
 

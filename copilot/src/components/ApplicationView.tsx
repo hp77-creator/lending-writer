@@ -3,8 +3,18 @@
 import { Application } from "@/types";
 import { useState, useEffect } from "react";
 import ProfilePanel from "@/components/ProfilePanel";
-import PDFViewer from "@/components/PDFViewer";
+import dynamic from "next/dynamic";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+
+const PDFViewer = dynamic(() => import("@/components/PDFViewer"), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 bg-neutral-100 dark:bg-neutral-900">
+      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+      <p className="text-sm">Loading PDF Viewer...</p>
+    </div>
+  )
+});
 
 interface ApplicationViewProps {
   application: Application;
@@ -16,12 +26,19 @@ export default function ApplicationView({ application, decision, onDecisionMade 
   const [selectedDoc, setSelectedDoc] = useState<string>(
     application.documents.length > 0 ? application.documents[0] : ""
   );
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Reset selected document if we switch to an application that doesn't have it
+  const handleCitationClick = (docName: string, query: string) => {
+    setSelectedDoc(docName);
+    setSearchQuery(query);
+  };
+
+  // Reset selected document if we switch to an application
   useEffect(() => {
     if (!application.documents.includes(selectedDoc)) {
       setSelectedDoc(application.documents.length > 0 ? application.documents[0] : "");
     }
+    setSearchQuery("");
   }, [application.documents, selectedDoc]);
 
   return (
@@ -29,7 +46,12 @@ export default function ApplicationView({ application, decision, onDecisionMade 
       <PanelGroup direction="horizontal">
         <Panel defaultSize={45} minSize={30} maxSize={70} className="border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <ProfilePanel application={application} decision={decision} onDecisionMade={onDecisionMade} />
+            <ProfilePanel 
+              application={application} 
+              decision={decision} 
+              onDecisionMade={onDecisionMade}
+              onCitationClick={handleCitationClick}
+            />
           </div>
         </Panel>
         
@@ -41,7 +63,10 @@ export default function ApplicationView({ application, decision, onDecisionMade 
               {application.documents.map((doc) => (
                 <button
                   key={doc}
-                  onClick={() => setSelectedDoc(doc)}
+                  onClick={() => {
+                    setSelectedDoc(doc);
+                    setSearchQuery("");
+                  }}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors ${
                     selectedDoc === doc 
                       ? "bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100" 
@@ -53,7 +78,7 @@ export default function ApplicationView({ application, decision, onDecisionMade 
               ))}
             </div>
             <div className="flex-1 overflow-hidden relative">
-              <PDFViewer appId={application.id} documentName={selectedDoc} />
+              <PDFViewer appId={application.id} documentName={selectedDoc} searchQuery={searchQuery} />
             </div>
           </div>
         </Panel>
