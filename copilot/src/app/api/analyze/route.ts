@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { promises as fs } from "fs";
 import path from "path";
+import { calculateEMI } from "@/lib/utils";
 
 // Require ANTHROPIC_API_KEY in environment
 const anthropic = new Anthropic({
@@ -89,9 +90,16 @@ Your output must be a valid JSON object matching this schema:
 Be precise. If you cannot find the information, use null.
 `;
 
+    const prospectiveEmi = calculateEMI(application.profile.requested_amount, 14, application.profile.requested_tenure_months);
+
     const userPrompt = `
 Here is the applicant's Stated Profile:
 ${JSON.stringify(application.profile, null, 2)}
+
+PROSPECTIVE LOAN OBLIGATION:
+Based on the requested amount and tenure at a 14% interest rate, the prospective new EMI will be: ${prospectiveEmi} INR.
+Please add this prospective EMI to any existing EMIs they have, and compare the total debt obligation to their extracted true monthly income to assess their real Debt-to-Income (DTI) ratio.
+If the new total monthly debt obligations exceed 50% of their extracted monthly income, flag this as a discrepancy or red flag.
 
 Please analyze the attached documents and verify the stated profile. Output ONLY valid JSON.
 `;
