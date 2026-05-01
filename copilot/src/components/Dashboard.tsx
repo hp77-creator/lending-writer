@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Application } from "@/types";
 import { Users, Calculator, Settings } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
@@ -17,6 +17,26 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
   );
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarRef = useRef<any>(null);
+  const [decisions, setDecisions] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch('/api/decisions')
+      .then(res => res.json())
+      .then(data => {
+        if (data.decisions) {
+          const decisionsMap: Record<string, string> = {};
+          data.decisions.forEach((d: any) => {
+            decisionsMap[d.app_id] = d.decision;
+          });
+          setDecisions(decisionsMap);
+        }
+      })
+      .catch(err => console.error("Failed to fetch decisions:", err));
+  }, []);
+
+  const handleDecisionMade = (appId: string, decision: string) => {
+    setDecisions(prev => ({ ...prev, [appId]: decision }));
+  };
 
   const selectedApp = initialApplications.find((app) => app.id === selectedAppId) || null;
 
@@ -63,6 +83,7 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
             applications={initialApplications} 
             selectedAppId={selectedAppId} 
             onSelectApp={setSelectedAppId} 
+            decisions={decisions}
           />
         </Panel>
         
@@ -71,7 +92,11 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
         <Panel defaultSize={75} minSize={50}>
           <main className="h-full w-full flex overflow-hidden relative">
             {selectedApp ? (
-              <ApplicationView application={selectedApp} />
+              <ApplicationView 
+                application={selectedApp} 
+                decision={decisions[selectedApp.id] || null}
+                onDecisionMade={(decision) => handleDecisionMade(selectedApp.id, decision)}
+              />
             ) : (
               <div className="flex-1 flex items-center justify-center text-neutral-500">
                 Select an application to begin review.

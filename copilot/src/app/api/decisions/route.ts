@@ -5,18 +5,19 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const appId = searchParams.get('appId');
 
-  if (!appId) {
-    return NextResponse.json({ error: "appId is required" }, { status: 400 });
-  }
-
   try {
-    const stmt = db.prepare('SELECT * FROM decisions WHERE app_id = ?');
-    const decision = stmt.get(appId);
-    
-    return NextResponse.json({ decision: decision || null });
+    if (appId) {
+      const stmt = db.prepare('SELECT * FROM decisions WHERE app_id = ?');
+      const decision = stmt.get(appId);
+      return NextResponse.json({ decision: decision || null });
+    } else {
+      const stmt = db.prepare('SELECT * FROM decisions');
+      const decisions = stmt.all();
+      return NextResponse.json({ decisions });
+    }
   } catch (error) {
-    console.error("Error fetching decision:", error);
-    return NextResponse.json({ error: "Failed to fetch decision" }, { status: 500 });
+    console.error("Error fetching decisions:", error);
+    return NextResponse.json({ error: "Failed to fetch decisions" }, { status: 500 });
   }
 }
 

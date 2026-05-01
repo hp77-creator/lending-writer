@@ -11,45 +11,56 @@ interface AICopilotProps {
 
 export default function AICopilot({ application }: AICopilotProps) {
   const [analysis, setAnalysis] = useState<CopilotAnalysis>({ status: "idle" });
+  const [hasStarted, setHasStarted] = useState(false);
 
+  // Reset when application changes
   useEffect(() => {
-    let isMounted = true;
-    
-    const analyzeApplication = async () => {
-      setAnalysis({ status: "loading" });
-      try {
-        const response = await fetch("/api/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ application }),
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to analyze application");
-        }
-        
-        const data = await response.json();
-        if (isMounted) {
-          setAnalysis({ status: "complete", ...data });
-        }
-      } catch (err) {
-        if (isMounted) {
-          setAnalysis({ 
-            status: "error", 
-            error: err instanceof Error ? err.message : "An unknown error occurred" 
-          });
-        }
+    setAnalysis({ status: "idle" });
+    setHasStarted(false);
+  }, [application.id]);
+
+  const handleAnalyze = async () => {
+    setHasStarted(true);
+    setAnalysis({ status: "loading" });
+    try {
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ application }),
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to analyze application");
       }
-    };
+      
+      const data = await response.json();
+      setAnalysis({ status: "complete", ...data });
+    } catch (err) {
+      setAnalysis({ 
+        status: "error", 
+        error: err instanceof Error ? err.message : "An unknown error occurred" 
+      });
+    }
+  };
 
-    analyzeApplication();
+  if (analysis.status === "idle" && !hasStarted) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8">
+        <button 
+          onClick={handleAnalyze} 
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm transition-colors flex items-center gap-2"
+        >
+          <ShieldAlert className="w-4 h-4" />
+          Generate AI Insights
+        </button>
+        <p className="text-xs text-neutral-500 mt-3 max-w-[280px] text-center">
+          Click to analyze documents and verify applicant profile using Claude AI. This consumes API credits.
+        </p>
+      </div>
+    );
+  }
 
-    return () => {
-      isMounted = false;
-    };
-  }, [application]);
-
-  if (analysis.status === "idle" || analysis.status === "loading") {
+  if (analysis.status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center py-6 text-blue-600 dark:text-blue-400">
         <Loader2 className="w-6 h-6 animate-spin mb-3" />

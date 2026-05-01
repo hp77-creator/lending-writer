@@ -8,28 +8,14 @@ import { useReviewTimer } from "@/hooks/useReviewTimer";
 
 interface ProfilePanelProps {
   application: Application;
+  decision: string | null;
+  onDecisionMade: (decision: string) => void;
 }
 
-export default function ProfilePanel({ application }: ProfilePanelProps) {
+export default function ProfilePanel({ application, decision, onDecisionMade }: ProfilePanelProps) {
   const { profile } = application;
   const { getTimeSpentSeconds } = useReviewTimer(application.id);
-  const [decision, setDecision] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    // Reset state when application changes
-    setDecision(null);
-    
-    // Fetch if a decision already exists
-    fetch(`/api/decisions?appId=${application.id}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.decision) {
-          setDecision(data.decision.decision);
-        }
-      })
-      .catch(err => console.error("Failed to fetch decision:", err));
-  }, [application.id]);
 
   const handleDecision = async (selectedDecision: string) => {
     setIsSubmitting(true);
@@ -47,7 +33,7 @@ export default function ProfilePanel({ application }: ProfilePanelProps) {
       });
 
       if (res.ok) {
-        setDecision(selectedDecision);
+        onDecisionMade(selectedDecision);
       }
     } catch (err) {
       console.error("Failed to save decision:", err);

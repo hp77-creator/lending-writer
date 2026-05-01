@@ -94,7 +94,7 @@ Please analyze the attached documents and verify the stated profile. Output ONLY
     ];
 
     const response = await anthropic.messages.create({
-      model: "claude-3-5-sonnet-20241022",
+      model: "claude-sonnet-4-6",
       max_tokens: 1000,
       temperature: 0,
       system: systemPrompt,
@@ -108,14 +108,28 @@ Please analyze the attached documents and verify the stated profile. Output ONLY
 
     const responseText = response.content[0].type === "text" ? response.content[0].text : "{}";
     
-    // Attempt to parse JSON out of the response (in case Claude wraps it in markdown)
-    const jsonMatch = responseText.match(/{.*}/) || [responseText];
+    // Attempt to parse JSON robustly, even if wrapped in markdown
+    let jsonString = responseText;
+    const startIndex = responseText.indexOf('{');
+    const endIndex = responseText.lastIndexOf('}');
+    
+    if (startIndex !== -1 && endIndex !== -1) {
+      jsonString = responseText.slice(startIndex, endIndex + 1);
+    }
+    
     let parsedData;
     try {
-      parsedData = JSON.parse(jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').trim());
+      parsedData = JSON.parse(jsonString);
     } catch (e) {
       console.error("Failed to parse Claude JSON", responseText);
-      throw new Error("Invalid JSON response from AI");
+      // Return a safe fallback rather than throwing 500, so the UI can display the error
+      return NextResponse.json({
+        extracted_income: null,
+        extracted_employer: null,
+        discrepancies: [],
+        red_flags: ["Failed to parse AI response.", "The model may have returned invalid JSON or struggled with the document."],
+        summary: "An error occurred while parsing the AI analysis."
+      });
     }
 
     return NextResponse.json(parsedData);

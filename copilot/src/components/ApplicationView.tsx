@@ -8,9 +8,11 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface ApplicationViewProps {
   application: Application;
+  decision: string | null;
+  onDecisionMade: (decision: string) => void;
 }
 
-export default function ApplicationView({ application }: ApplicationViewProps) {
+export default function ApplicationView({ application, decision, onDecisionMade }: ApplicationViewProps) {
   const [selectedDoc, setSelectedDoc] = useState<string>(
     application.documents.length > 0 ? application.documents[0] : ""
   );
@@ -27,7 +29,7 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
       <PanelGroup direction="horizontal">
         <Panel defaultSize={45} minSize={30} maxSize={70} className="border-r border-neutral-200 dark:border-neutral-800 flex flex-col h-full overflow-hidden">
           <div className="h-full overflow-y-auto">
-            <ProfilePanel application={application} />
+            <ProfilePanel application={application} decision={decision} onDecisionMade={onDecisionMade} />
           </div>
         </Panel>
         
