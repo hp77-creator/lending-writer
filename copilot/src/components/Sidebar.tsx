@@ -12,7 +12,7 @@ interface SidebarProps {
 
 export default function Sidebar({ applications, selectedAppId, onSelectApp }: SidebarProps) {
   return (
-    <div className="w-80 h-full bg-white dark:bg-neutral-950 border-r border-neutral-200 dark:border-neutral-800 flex flex-col shrink-0 overflow-y-auto">
+    <div className="w-full h-full bg-white dark:bg-neutral-950 flex flex-col overflow-y-auto">
       <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 bg-white/90 dark:bg-neutral-950/90 backdrop-blur z-10">
         <h2 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider">Queue ({applications.length})</h2>
       </div>

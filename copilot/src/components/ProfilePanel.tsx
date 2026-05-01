@@ -12,7 +12,7 @@ export default function ProfilePanel({ application }: ProfilePanelProps) {
   const { profile } = application;
 
   return (
-    <div className="p-6 flex flex-col gap-8 h-full relative">
+    <div className="p-6 flex flex-col gap-8 relative">
       {/* Header Info */}
       <div className="flex justify-between items-start gap-4">
         <div>
@@ -73,7 +73,7 @@ export default function ProfilePanel({ application }: ProfilePanelProps) {
             <div className="text-neutral-500 mb-1">Existing EMI</div>
             <div className="font-medium">{formatCurrency(profile.existing_emi_monthly)}</div>
             {profile.existing_emi_note && (
-              <div className="text-xs text-neutral-500 mt-0.5 max-w-[200px] truncate" title={profile.existing_emi_note}>
+              <div className="text-xs text-neutral-500 mt-0.5">
                 {profile.existing_emi_note}
               </div>
             )}
