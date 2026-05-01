@@ -1,7 +1,7 @@
 "use client";
 
 import { Application } from "@/types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfilePanel from "./ProfilePanel";
 import PDFViewer from "./PDFViewer";
 
@@ -13,6 +13,13 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
   const [selectedDoc, setSelectedDoc] = useState<string>(
     application.documents.length > 0 ? application.documents[0] : ""
   );
+
+  // Reset selected document if we switch to an application that doesn't have it
+  useEffect(() => {
+    if (!application.documents.includes(selectedDoc)) {
+      setSelectedDoc(application.documents.length > 0 ? application.documents[0] : "");
+    }
+  }, [application.documents, selectedDoc]);
 
   return (
     <div className="flex h-full w-full overflow-hidden">
