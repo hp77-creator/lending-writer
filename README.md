@@ -42,7 +42,7 @@ I built an **Underwriter Copilot Dashboard**.
 
 **What I built and what I faked:**
 - **Built:** A full-stack Next.js app with a real Anthropic Claude 3.5 Sonnet integration using the Vision/Document API to read PDFs natively. I built a split-screen UI because context switching between tabs is the enemy of underwriting speed.
-- **Faked:** Authentication (assumed logged in as Aditi Verma), Database (reads `applications.json` from disk), and Document Storage (serves PDFs straight from the local filesystem).
+- **Faked:** Authentication (assumed logged in as HP), Database (reads `applications.json` from disk), and Document Storage (serves PDFs straight from the local filesystem).
 
 **What I'd build with another two weeks:**
 1. **Queue Management:** Integration with a real database to allow locking applications so two officers don't review the same file.

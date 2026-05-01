@@ -19,7 +19,7 @@ export default async function Home() {
           <h1 className="font-semibold text-lg tracking-tight">Lending Copilot</h1>
         </div>
         <div className="ml-auto flex items-center gap-4 text-sm text-neutral-500">
-          <span>Loan Officer: <strong>Aditi Verma</strong></span>
+          <span>Loan Officer: <strong>HP</strong></span>
         </div>
       </header>
       
