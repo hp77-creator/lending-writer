@@ -24,6 +24,14 @@ export default function ProfilePanel({ application, decisionObj, onDecisionMade,
   const [aiInsight, setAiInsight] = useState<CopilotAnalysis | null>(null);
   const [pendingDecision, setPendingDecision] = useState<string | null>(null);
 
+  // Reset state when switching applications
+  useEffect(() => {
+    setComment("");
+    setPendingDecision(null);
+    setAiUsed(false);
+    setAiInsight(null);
+  }, [application.id]);
+
   const handleDecision = async (selectedDecision: string) => {
     if (!comment.trim()) return; // Prevent submission if comment is empty
     
