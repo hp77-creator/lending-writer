@@ -18,11 +18,11 @@ const PDFViewer = dynamic(() => import("@/components/PDFViewer"), {
 
 interface ApplicationViewProps {
   application: Application;
-  decision: string | null;
-  onDecisionMade: (decision: string) => void;
+  decisionObj: any | null;
+  onDecisionMade: (fullDecision: any) => void;
 }
 
-export default function ApplicationView({ application, decision, onDecisionMade }: ApplicationViewProps) {
+export default function ApplicationView({ application, decisionObj, onDecisionMade }: ApplicationViewProps) {
   const [selectedDoc, setSelectedDoc] = useState<string>(
     application.documents.length > 0 ? application.documents[0] : ""
   );
@@ -48,7 +48,7 @@ export default function ApplicationView({ application, decision, onDecisionMade 
           <div className="h-full overflow-y-auto">
             <ProfilePanel 
               application={application} 
-              decision={decision} 
+              decisionObj={decisionObj} 
               onDecisionMade={onDecisionMade}
               onCitationClick={handleCitationClick}
             />

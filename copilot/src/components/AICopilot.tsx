@@ -8,9 +8,10 @@ import { AlertCircle, CheckCircle2, ChevronRight, Loader2, ShieldAlert } from "l
 interface AICopilotProps {
   application: Application;
   onCitationClick?: (docName: string, query: string) => void;
+  onAnalysisUpdate?: (analysis: CopilotAnalysis | null, hasStarted: boolean) => void;
 }
 
-export default function AICopilot({ application, onCitationClick }: AICopilotProps) {
+export default function AICopilot({ application, onCitationClick, onAnalysisUpdate }: AICopilotProps) {
   const [analysis, setAnalysis] = useState<CopilotAnalysis>({ status: "idle" });
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -18,6 +19,8 @@ export default function AICopilot({ application, onCitationClick }: AICopilotPro
   useEffect(() => {
     setAnalysis({ status: "idle" });
     setHasStarted(false);
+    onAnalysisUpdate?.(null, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [application.id]);
 
   const parseTextWithCitations = (text: string) => {
@@ -60,6 +63,7 @@ export default function AICopilot({ application, onCitationClick }: AICopilotPro
   const handleAnalyze = async () => {
     setHasStarted(true);
     setAnalysis({ status: "loading" });
+    onAnalysisUpdate?.({ status: "loading" }, true);
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -73,11 +77,14 @@ export default function AICopilot({ application, onCitationClick }: AICopilotPro
       
       const data = await response.json();
       setAnalysis({ status: "complete", ...data });
+      onAnalysisUpdate?.({ status: "complete", ...data }, true);
     } catch (err) {
-      setAnalysis({ 
+      const errorState: CopilotAnalysis = { 
         status: "error", 
         error: err instanceof Error ? err.message : "An unknown error occurred" 
-      });
+      };
+      setAnalysis(errorState);
+      onAnalysisUpdate?.(errorState, true);
     }
   };
 

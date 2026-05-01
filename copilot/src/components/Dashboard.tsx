@@ -17,16 +17,16 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
   );
   const [isCollapsed, setIsCollapsed] = useState(false);
   const sidebarRef = useRef<any>(null);
-  const [decisions, setDecisions] = useState<Record<string, string>>({});
+  const [decisions, setDecisions] = useState<Record<string, any>>({});
 
   useEffect(() => {
     fetch('/api/decisions')
       .then(res => res.json())
       .then(data => {
         if (data.decisions) {
-          const decisionsMap: Record<string, string> = {};
+          const decisionsMap: Record<string, any> = {};
           data.decisions.forEach((d: any) => {
-            decisionsMap[d.app_id] = d.decision;
+            decisionsMap[d.app_id] = d;
           });
           setDecisions(decisionsMap);
         }
@@ -34,8 +34,8 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
       .catch(err => console.error("Failed to fetch decisions:", err));
   }, []);
 
-  const handleDecisionMade = (appId: string, decision: string) => {
-    setDecisions(prev => ({ ...prev, [appId]: decision }));
+  const handleDecisionMade = (appId: string, fullDecision: any) => {
+    setDecisions(prev => ({ ...prev, [appId]: fullDecision }));
   };
 
   const selectedApp = initialApplications.find((app) => app.id === selectedAppId) || null;
@@ -83,7 +83,7 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
             applications={initialApplications} 
             selectedAppId={selectedAppId} 
             onSelectApp={setSelectedAppId} 
-            decisions={decisions}
+            decisions={Object.fromEntries(Object.entries(decisions).map(([k, v]) => [k, v.decision]))}
           />
         </Panel>
         
@@ -94,8 +94,8 @@ export default function Dashboard({ initialApplications }: DashboardProps) {
             {selectedApp ? (
               <ApplicationView 
                 application={selectedApp} 
-                decision={decisions[selectedApp.id] || null}
-                onDecisionMade={(decision) => handleDecisionMade(selectedApp.id, decision)}
+                decisionObj={decisions[selectedApp.id] || null}
+                onDecisionMade={(fullDecision) => handleDecisionMade(selectedApp.id, fullDecision)}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-neutral-500">

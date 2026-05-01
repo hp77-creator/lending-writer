@@ -23,22 +23,25 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { appId, decision, timeSpentSeconds } = await request.json();
+    const { appId, decision, timeSpentSeconds, aiUsed = 0, aiInsight = null, comment = null } = await request.json();
 
     if (!appId || !decision || typeof timeSpentSeconds !== 'number') {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const stmt = db.prepare(`
-      INSERT INTO decisions (app_id, decision, time_spent_seconds)
-      VALUES (?, ?, ?)
+      INSERT INTO decisions (app_id, decision, time_spent_seconds, ai_used, ai_insight, comment)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(app_id) DO UPDATE SET 
         decision = excluded.decision,
         time_spent_seconds = excluded.time_spent_seconds,
+        ai_used = excluded.ai_used,
+        ai_insight = excluded.ai_insight,
+        comment = excluded.comment,
         created_at = CURRENT_TIMESTAMP
     `);
     
-    stmt.run(appId, decision, timeSpentSeconds);
+    stmt.run(appId, decision, timeSpentSeconds, aiUsed ? 1 : 0, aiInsight, comment);
 
     return NextResponse.json({ success: true });
   } catch (error) {

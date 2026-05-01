@@ -19,6 +19,9 @@ db.exec(`
     app_id TEXT UNIQUE NOT NULL,
     decision TEXT NOT NULL,
     time_spent_seconds INTEGER NOT NULL,
+    ai_used INTEGER DEFAULT 0,
+    ai_insight TEXT,
+    comment TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
