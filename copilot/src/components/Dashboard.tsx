@@ -3,8 +3,8 @@
 import { useState, useRef } from "react";
 import { Application } from "@/types";
 import { Users, Calculator, Settings } from "lucide-react";
-import Sidebar from "./Sidebar";
-import ApplicationView from "./ApplicationView";
+import Sidebar from "@/components/Sidebar";
+import ApplicationView from "@/components/ApplicationView";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface DashboardProps {

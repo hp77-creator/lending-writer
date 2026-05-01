@@ -2,8 +2,8 @@
 
 import { Application } from "@/types";
 import { useState, useEffect } from "react";
-import ProfilePanel from "./ProfilePanel";
-import PDFViewer from "./PDFViewer";
+import ProfilePanel from "@/components/ProfilePanel";
+import PDFViewer from "@/components/PDFViewer";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 interface ApplicationViewProps {

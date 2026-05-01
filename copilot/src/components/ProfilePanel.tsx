@@ -2,7 +2,7 @@
 
 import { Application } from "@/types";
 import { formatCurrency } from "@/lib/utils";
-import AICopilot from "./AICopilot";
+import AICopilot from "@/components/AICopilot";
 
 interface ProfilePanelProps {
   application: Application;

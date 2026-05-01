@@ -109,7 +109,7 @@ Please analyze the attached documents and verify the stated profile. Output ONLY
     const responseText = response.content[0].type === "text" ? response.content[0].text : "{}";
     
     // Attempt to parse JSON out of the response (in case Claude wraps it in markdown)
-    const jsonMatch = responseText.match(/{.*}/s) || [responseText];
+    const jsonMatch = responseText.match(/{.*}/) || [responseText];
     let parsedData;
     try {
       parsedData = JSON.parse(jsonMatch[0].replace(/```json/g, '').replace(/```/g, '').trim());
