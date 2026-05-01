@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Application } from "@/types";
 import { formatCurrency } from "@/lib/utils";
 import AICopilot from "@/components/AICopilot";
+import { useReviewTimer } from "@/hooks/useReviewTimer";
 
 interface ProfilePanelProps {
   application: Application;
@@ -10,6 +12,49 @@ interface ProfilePanelProps {
 
 export default function ProfilePanel({ application }: ProfilePanelProps) {
   const { profile } = application;
+  const { getTimeSpentSeconds } = useReviewTimer(application.id);
+  const [decision, setDecision] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Reset state when application changes
+    setDecision(null);
+    
+    // Fetch if a decision already exists
+    fetch(`/api/decisions?appId=${application.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.decision) {
+          setDecision(data.decision.decision);
+        }
+      })
+      .catch(err => console.error("Failed to fetch decision:", err));
+  }, [application.id]);
+
+  const handleDecision = async (selectedDecision: string) => {
+    setIsSubmitting(true);
+    const timeSpentSeconds = getTimeSpentSeconds();
+
+    try {
+      const res = await fetch('/api/decisions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appId: application.id,
+          decision: selectedDecision,
+          timeSpentSeconds
+        })
+      });
+
+      if (res.ok) {
+        setDecision(selectedDecision);
+      }
+    } catch (err) {
+      console.error("Failed to save decision:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="p-6 flex flex-col gap-8 relative">
@@ -24,17 +69,41 @@ export default function ProfilePanel({ application }: ProfilePanelProps) {
           </div>
         </div>
         
-        {/* Action Buttons */}
+        {/* Action Buttons or Decision Badge */}
         <div className="flex gap-2 shrink-0 mt-1">
-          <button className="px-4 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-200 dark:border-red-900/50">
-            Reject
-          </button>
-          <button className="px-4 bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 py-1.5 rounded-md text-sm font-medium transition-colors border border-neutral-200 dark:border-neutral-700">
-            Request Info
-          </button>
-          <button className="px-4 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 py-1.5 rounded-md text-sm font-medium transition-colors">
-            Approve
-          </button>
+          {decision ? (
+            <div className={`px-4 py-1.5 rounded-md text-sm font-medium border ${
+              decision === 'Approve' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-900/50' :
+              decision === 'Reject' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50' :
+              'bg-neutral-100 text-neutral-700 border-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700'
+            }`}>
+              Decision: {decision}
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => handleDecision('Reject')}
+                disabled={isSubmitting}
+                className="px-4 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 py-1.5 rounded-md text-sm font-medium transition-colors border border-red-200 dark:border-red-900/50 disabled:opacity-50"
+              >
+                Reject
+              </button>
+              <button 
+                onClick={() => handleDecision('Request Info')}
+                disabled={isSubmitting}
+                className="px-4 bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 py-1.5 rounded-md text-sm font-medium transition-colors border border-neutral-200 dark:border-neutral-700 disabled:opacity-50"
+              >
+                Request Info
+              </button>
+              <button 
+                onClick={() => handleDecision('Approve')}
+                disabled={isSubmitting}
+                className="px-4 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-200 py-1.5 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+              >
+                Approve
+              </button>
+            </>
+          )}
         </div>
       </div>
 
