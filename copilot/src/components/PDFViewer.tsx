@@ -18,10 +18,10 @@ export default function PDFViewer({ appId, documentName }: PDFViewerProps) {
   const pdfUrl = `/api/documents/${appId}/${documentName}`;
 
   return (
-    <div className="w-full h-full bg-neutral-200 dark:bg-neutral-800 flex flex-col">
+    <div className="absolute inset-0 bg-neutral-200 dark:bg-neutral-800">
       <iframe
         src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
-        className="w-full h-full flex-1 border-0"
+        className="w-full h-full border-0"
         title={`Document: ${documentName}`}
       />
     </div>
