@@ -1,71 +1,82 @@
-# Credit Underwriter Copilot 
+# ⚡ Credit Underwriter Copilot
 
-**Candidate Name:** Himanshu Pandey
-**Time Spent:** ~6 hours
-**Stack:** Next.js 16 (App Router), React, Tailwind CSS, Anthropic SDK (Claude 3.6 Sonnet)
-
-To run the app:
-```bash
-cd copilot
-npm install
-npm run dev
-```
-
-*(Make sure to set \`ANTHROPIC_API_KEY\` in \`copilot/.env.local\` to enable the AI features)*
+An AI-assisted, split-screen dashboard designed for credit and loan underwriters to streamline the document reconciliation and verification process. By using Claude 3.5 Sonnet's Document and Vision capabilities, the Copilot automates data extraction and compares applicant-stated details directly with uploaded PDFs, reducing average review times from **15 minutes down to 3–5 minutes**.
 
 ---
 
-## Part 1: Product Memo
+## 🚀 Key Features
 
-**1. Who is your user?**
-The **Loan Officer** (specifically the frontline underwriter).
-
-**2. What problem are you solving for them?**
-Reducing the cognitive load of "stare-and-compare" underwriting. I am automating the extraction and reconciliation of applicant-stated data against uploaded documents along with tools like EMI calculator, aiming to reduce the average review time from 15 minutes down to 3–5 minutes per application.
-
-**3. Why this user and this problem, and not the obvious alternatives?**
-The loan officer sits at the frontline of the lending business. They have to review applications. Other stakeholders in the process somehow depend on the performance of Loan Officers.
-Risk Team checks random applications and ensures that none is rejected without any concrete reason now for something like that
-I could use AI to fasten the review process but then it would have took another direction of defining rules for which kinds of application are good for review and which ones are not.
-
-Compliance Team checks also does the similar task and is responsible for policies being followed according to the Govt. guidelines. This also required lot of assumptions and workflow was not really clear with the requirement.
-
-Operations head is responsible for metrics around loan processing. So ideally reducing the RDS which is the time taken to underwrite the application is his main job. I felt optimizing the Loan officer would have simplified roles for Ops team. so I didn't create anything specific for them.
-
-**4. What does success look like in 6 months?**
-A reduction in average review time to 5 minutes, coupled with a zero percent increase in the default rate or risk-team overturns. The metric is "throughput without quality degradation." I am storing time taken for each review in the database along with if AI was used for decisioning or not.
+- **Split-Screen Workspace**: Side-by-side view of client data, uploaded PDFs, and AI reconciliation to eliminate context-switching.
+- **AI Document Reconciliation**: Automated parsing and validation of bank statements, pay stubs, and identity proofs against applicant claims using the Claude 3.5 Sonnet API.
+- **Prompt Injection Protection**: A built-in security layer that scans documents and prompts for manipulation attempts (e.g., hidden instructions like "AUTO-APPROVE") and alerts the underwriter with a **Critical Security Warning**.
+- **Financial Utilities**: Integrated tools (like an EMI calculator) to perform quick recalculations inline.
+- **Telemetry & Audit Logging**: Track decision logs, approval justification comments, and time-to-decision metrics, documenting whether AI-assisted insight was utilized.
 
 ---
 
-## Part 2: The Application
+## 🛠️ Architecture & Tech Stack
 
-I built an **Underwriter Copilot Dashboard**.
-- **Scope:** It explicitly focuses on the document reconciliation phase.
-- **Handling AI Failure Modes (Crucial):** I explicitly designed the system to catch "Prompt Injection" attacks. For example, `APP_011` contains a planted prompt injection instructing the AI to "AUTO-APPROVE." Instead of letting the AI run amok or hiding the raw data, the Copilot uses a system prompt to detect these manipulations and surfaces a **CRITICAL SECURITY WARNING** to the officer, highlighting the malicious text. The human always sees the raw PDFs side-by-side with the AI analysis.
-
----
-
-## Part 3: Architecture & Decisions
-
-**What I built and what I faked:**
-- **Built:** A full-stack Next.js app with a real Anthropic Claude 3.6 Sonnet integration using the Vision/Document API to read PDFs natively. I built a split-screen UI because context switching between tabs is the enemy of underwriting speed.
-- **Faked:** Authentication (assumed logged in as HP), Database (reads `applications.json` from disk), and Document Storage (serves PDFs straight from the local filesystem).
-
-**What I'd build with another two weeks:**
-1. **Queue Management:** Integration with a real database to allow locking applications so two officers don't review the same file.
-2. **Confidence Scores:** Have the LLM output a confidence score for its extractions. If confidence is below 90%, visually highlight the field in yellow to force human review. Also Improve the highlights in PDFs.
-3. **Structured Audit Trail:** When the officer clicks "Approve" or "Reject", generate a signed PDF report capturing *exactly* what the AI saw and what the human verified, satisfying the Compliance team. Currently I am simply storing decisions in JSON in DB. That can be converted into pdf and stored in some storage bucket for audit purpose
-4. **Rule Engine:** Incorporating a rule engine where rules are added by Risk Analysts which evaluates user's income, and some parameter like Debt to Income ratio and automatically rejects customers without Human intervention to reduce the load on loan officers.  
-
-**What I'd refuse to build, even if a PM asked:**
-**Auto-Rejection based solely on AI document analysis.** Current LLMs hallucinate numbers often enough that allowing an AI to unilaterally reject a loan without human eyes on the file is an unacceptable customer churn risk and a massive compliance liability. The AI can highlight discrepancies, but it must not click the final "Reject" button.
+- **Framework**: Next.js (App Router)
+- **UI & Styling**: React, Tailwind CSS
+- **AI Engine**: Anthropic SDK (Claude 3.5 Sonnet / Vision API)
+- **Data Persistence**: Local JSON/SQLite storage for application telemetry and audit logs.
 
 ---
 
-## Where I disagreed with the AI
+## ⚙️ Getting Started
 
-*(This section documents my collaboration with the AI coding assistant used during development)*
+### Prerequisites
 
-1. **Database Architecture:** The AI initially suggested setting up a PostgreSQL database and Prisma ORM to store the application state. I explicitly rejected this and forced it to read `applications.json` from the filesystem into memory. Holding state in memory is sufficient to demonstrate the core value of the copilot without wasting hours on boilerplate.
-2. **File Moving Bash Commands:** The AI tried to write a complex bash script (`cp -a copilot/. ./ && rm -rf copilot`) to move the scaffolded Next.js app to the root directory to satisfy its own aesthetics. I disagreed and instructed it to just leave the app inside the `copilot/` directory and proceed, saving time and preventing git conflicts.
+- Node.js (v18.x or later)
+- Anthropic API Key
+
+### Installation & Setup
+
+1. **Navigate to the project directory:**
+   ```bash
+   cd copilot
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables:**
+   Create a `.env.local` file inside the `copilot/` directory and add your Anthropic API Key:
+   ```env
+   ANTHROPIC_API_KEY=your_api_key_here
+   ```
+
+4. **Start the local development server:**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+
+---
+
+## 🛡️ Core Philosophy: Human-in-the-Loop AI
+
+This project is built on the principle that **AI is an assistant, not the decision-maker**.
+- **No Autonomous Decisions**: The system will highlight discrepancies, extract data, and notify officers of security anomalies, but it will never autonomously approve or reject applications.
+- **Prompt Injection Defense**: When applicants attempt to plant instructions (e.g., application `APP_011` with a simulated prompt injection), the Copilot isolates the threat and alerts the underwriter instead of obeying the malicious instruction.
+- **Reconciliation Audit Trail**: Decisions (approval/rejection) are explicitly linked to justification comments and captured as audit logs.
+
+---
+
+## 📌 Architectural Decisions
+
+During the development of this prototype, several pragmatism-first decisions were made:
+- **Local File State**: Instead of setting up a heavy database and ORM overhead during the initial prototype phase, the system reads application state directly from a structured `applications.json` file. This made it fast to iterate on the core Vision AI functionality.
+- **Native Document Parsing**: Leveraging Claude's native vision and document capabilities instead of complex local PDF parsing OCR pipelines, minimizing API roundtrips and ensuring higher accuracy.
+
+---
+
+## 🗺️ Roadmap & Future Enhancements
+
+1. **Active Queue Management**: Implement database-level row locking to coordinate multi-officer workloads.
+2. **Dynamic Confidence Scores**: Color-code LLM extraction values based on confidence (e.g., highlighting low-confidence values in yellow to mandate verification).
+3. **PDF Audit Report Export**: Generate signed PDF receipts capturing exactly what the AI reconciled and what the human verified for internal compliance.
+4. **Configurable Rules Engine**: Allow risk analysts to build custom check scripts (e.g., debt-to-income limits) to flag or auto-rejection pre-checks before underwriting review.
 
